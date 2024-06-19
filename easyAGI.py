@@ -3,17 +3,19 @@
 import openai
 from api import APIManager
 from bdi import BDIModel, Belief, Desire, Intention
-from logic import LogicTables
 from SocraticReasoning import SocraticReasoning
-from reasoning import Reasoning
 from self_healing import SelfHealingSystem
+from reasoning import Reasoning
+from logic import LogicTables
+
 from memory import save_conversation_memory, load_conversation_memory, delete_conversation_memory
 
 class AGI:
     def __init__(self):
-        # Initialize components
+        # Initialize API Manager
         self.api_manager = APIManager()
-        self.api_manager.ensure_api_keys()
+        self.interactive_api_key_management()
+        
         self.openai_api_key = self.api_manager.get_api_key('openai')
         
         if self.openai_api_key:
@@ -22,11 +24,27 @@ class AGI:
             print("OpenAI API key not found. Exiting...")
             exit(1)
         
+        # Initialize other components
         self.bdi_model = BDIModel()
         self.logic_tables = LogicTables()
         self.socratic_reasoner = SocraticReasoning()
         self.reasoner = Reasoning()
         self.self_healer = SelfHealingSystem()
+
+    def interactive_api_key_management(self):
+        while True:
+            self.api_manager.list_api_keys()
+            action = input("Choose an action: (a) Add API key, (d) Delete API key, (l) List API keys, (Press Enter to continue): ").strip().lower()
+            if not action:
+                break
+            if action == 'a':
+                self.api_manager.add_api_key_interactive()
+            elif action == 'd':
+                api_name = input("Enter the API name to delete: ").strip()
+                if api_name:
+                    self.api_manager.remove_api_key(api_name)
+            elif action == 'l':
+                self.api_manager.list_api_keys()
 
     def perceive_environment(self):
         # This method should gather data from the environment
@@ -45,7 +63,11 @@ class AGI:
         
         self.logic_tables.add_variable('Belief')
         self.logic_tables.add_expression('True')  # Simplified example
-        self.logic_tables.display_truth_table()
+        truth_table = self.logic_tables.generate_truth_table()
+        
+        # Display truth table
+        for row in truth_table:
+            print("\t".join(map(str, row)))
         
         self.socratic_reasoner.add_premise(data)
         self.socratic_reasoner.draw_conclusion()
@@ -60,7 +82,7 @@ class AGI:
         prompt = f"Autonomous general intelligence return solution: {knowledge}."
         
         response = openai.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are openmind the easy action event AGI solution creator."},
                 {"role": "user", "content": prompt}
@@ -95,4 +117,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
